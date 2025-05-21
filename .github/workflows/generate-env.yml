@@ -48,7 +48,7 @@ jobs:
           fi
             
           ls -la
-          
+
           if [ -f .env.production ]; then chmod 600 .env.production; fi
           if [ -f .env.local ]; then chmod 600 .env.local; fi
 
@@ -61,24 +61,30 @@ jobs:
             echo "path=.env.local" >> $GITHUB_OUTPUT
           fi
 
+      - name: Debug env files presence
+        run: ls -la
+
+      - name: Debug artifact path
+        run: echo "Artifact path is '${{ steps.set-path.outputs.path }}'"
+
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ steps.set-branch.outputs.branch }}
           path: ${{ steps.set-path.outputs.path }}
 
-  use-env:
-    needs: generate-env
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download env artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: env-file-${{ needs.generate-env.outputs.branch }}
-          path: ./envfiles
+  # use-env:
+  #   needs: generate-env
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Download env artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: env-file-${{ needs.generate-env.outputs.branch }}
+  #         path: ./envfiles
 
-      - name: List downloaded files
-        run: ls -la ./envfiles
+  #     - name: List downloaded files
+  #       run: ls -la ./envfiles
 
-      - name: Show env file content
-        run: cat ./envfiles/*
+  #     - name: Show env file content
+  #       run: cat ./envfiles/*
