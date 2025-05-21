@@ -99,23 +99,18 @@ jobs:
               echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
             fi
         
-      - name: Detect env file
-        id: detect-env
+      - name: Find env file path
+        id: find-env
         run: |
-            if [ -f .env.production ]; then
-              echo "envfile=.env.production" >> $GITHUB_OUTPUT
-            elif [ -f .env.local ]; then
-              echo "envfile=.env.local" >> $GITHUB_OUTPUT
-            else
-              echo "envfile=" >> $GITHUB_OUTPUT
-            fi
+          envfile=$(find . -type f -name ".env.*" | head -n 1)
+          echo "Found env file: $envfile"
+          echo "envfile=$envfile" >> $GITHUB_OUTPUT
          
-      - name: Upload env artifact
-        if: steps.detect-env.outputs.envfile != ''
+      - name: Upload env artifact 
         uses: actions/upload-artifact@v4
         with:
           name: env-file
-          path: ${{ steps.detect-env.outputs.envfile }}
+          path: ${{ steps.find-env.outputs.envfile }}
         
   # use-env:
   #   needs: generate-env
