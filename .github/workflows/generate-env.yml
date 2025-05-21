@@ -50,11 +50,9 @@ jobs:
           fi
 
       - name: Set artifact path
-        id: set-path
-        env:
-          BRANCH: ${{ steps.set-branch.outputs.branch }}
+        id: set-path 
         run: |
-          if [ "$BRANCH" = "main" ]; then
+          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
           else
             echo "path=.env.local" >> $GITHUB_OUTPUT
