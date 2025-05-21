@@ -31,11 +31,12 @@ jobs:
 
       - name: Debug branch
         run: |
-         echo "Detected branch: ${{ steps.set-branch.outputs.branch }}"
+          echo "Detected branch: ${{ steps.set-branch.outputs.branch }}"
 
       - name: Create env file
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
             echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
@@ -47,8 +48,10 @@ jobs:
 
       - name: Set artifact path
         id: set-path
+        env:
+          BRANCH: ${{ steps.set-branch.outputs.branch }}
         run: |
-          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+          if [ "$BRANCH" = "main" ]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
           else
             echo "path=.env.local" >> $GITHUB_OUTPUT
