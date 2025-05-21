@@ -15,8 +15,11 @@ on:
 jobs:
   generate-env:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'main' || (github.ref_name == 'dev' && 'dev' || '') }}
+
     outputs:
       branch: ${{ steps.set-branch.outputs.branch }}
+      
     steps:
       - uses: actions/checkout@v3
 
