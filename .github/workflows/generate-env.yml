@@ -85,19 +85,6 @@ jobs:
             echo "File '${{ steps.set-path.outputs.path }}' does NOT exist."
             exit 1  # fail the job if file doesn't exist
           fi
-
-      - name: Confirm file to upload
-        run: |
-          echo "Uploading file from path: '${{ steps.set-path.outputs.path }}'"
-          ls -la "${{ steps.set-path.outputs.path }}"
-
-          - name: Create env file
-          run: |
-            if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-              echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
-            else
-              echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
-            fi
         
       - name: Find env file path
         id: find-env
