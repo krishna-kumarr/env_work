@@ -39,15 +39,17 @@ jobs:
       - name: Create env file
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}"
-            echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
+            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
-            echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
+            echo "API_KEY=${{ secrets.DEV_API_KEY }}" | tee .env.local
+            echo "DB_URL=${{ secrets.DEV_DB_URL }}" | tee -a .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
           fi
+            ls -la
+          
+          chmod 600 .env.production .env.local
 
       - name: Set artifact path
         id: set-path 
