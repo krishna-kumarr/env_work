@@ -1,4 +1,4 @@
-name: Test Upload Artifact
+name: Upload Test
 
 on: [push]
 
@@ -6,8 +6,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "test" > test.txt
+      - run: echo "hello" > hello.txt
       - uses: actions/upload-artifact@v3
         with:
-          name: test-artifact
-          path: test.txt
+          name: hello-artifact
+          path: hello.txt
