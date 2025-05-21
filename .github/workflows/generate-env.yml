@@ -9,19 +9,24 @@ on:
     inputs:
       branch:
         description: 'Branch to generate env for'
-        required: true
-        default: 'main'
+        required: false
+        default: ''
 
 jobs:
   generate-env:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
- 
+
+      # Set clean branch name into env var
+      - name: Set branch variable
+        run: echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Debug branch info
+        run: echo "Branch is $BRANCH"
+
       - name: Create env file based on branch
         run: |
-          BRANCH=${{ github.ref_name }} 
-          echo "Branch is $BRANCH"
           if [ "$BRANCH" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
           elif [ "$BRANCH" = "dev" ]; then
@@ -38,5 +43,5 @@ jobs:
       - name: Upload env file
         uses: actions/upload-artifact@v4
         with:
-          name: env-file-${{ github.ref_name }}
-          path: ${{ github.ref_name == 'main' && '.env.production' || '.env.local' }}
+          name: env-file-${{ env.BRANCH }}
+          path: ${{ env.BRANCH == 'main' && '.env.production' || '.env.local' }}
