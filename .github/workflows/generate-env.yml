@@ -1,13 +1,23 @@
-name: Test Upload Artifact
+name: Generate Env File
 
 on: [push]
+  # push:
+  #   branches: [main, dev]
+  # pull_request:
+  #   branches: [main, dev]
+  # workflow_dispatch:
+  #   inputs:
+  #     branch:
+  #       description: 'Branch to generate env for'
+  #       required: false
+  #       default: 'main'
 
 jobs:
   test-upload:
     runs-on: ubuntu-latest
     steps:
       - run: echo "test" > test.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3.0.0
         with:
           name: test-artifact
           path: test.txt
