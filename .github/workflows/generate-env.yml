@@ -91,12 +91,19 @@ jobs:
           echo "Uploading file from path: '${{ steps.set-path.outputs.path }}'"
           ls -la "${{ steps.set-path.outputs.path }}"
 
+      - name: Detect env file
+        id: detect-env
+        run: |
+          file=$(ls | grep -E "^\.env\.")
+          echo "Detected env file: $file"
+          echo "envfile=$file" >> $GITHUB_OUTPUT
+        
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           name: env-file
-          path: ./$(ls | grep .env)
-
+          path: ${{ steps.detect-env.outputs.envfile }}
+          if-no-files-found: warn
   # use-env:
   #   needs: generate-env
   #   runs-on: ubuntu-latest
