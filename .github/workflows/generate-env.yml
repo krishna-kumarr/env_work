@@ -1,8 +1,4 @@
-<<<<<<< Updated upstream
-name: Upload Test
-=======
 name: Generate Env File
->>>>>>> Stashed changes
 
 on:
   push:
@@ -12,14 +8,6 @@ on:
 jobs:
   generate-env:
     runs-on: ubuntu-latest
-<<<<<<< Updated upstream
-    steps:
-      - run: echo "hello" > hello.txt
-      - uses: actions/upload-artifact@v3
-        with:
-          name: hello-artifact
-          path: hello.txt
-=======
 
     steps: 
       # Create env file based on branch
@@ -55,4 +43,3 @@ jobs:
         with:
           name: env-file
           path: .env.local
->>>>>>> Stashed changes
