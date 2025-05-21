@@ -1,13 +1,58 @@
+<<<<<<< Updated upstream
 name: Upload Test
+=======
+name: Generate Env File
+>>>>>>> Stashed changes
 
-on: [push]
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
 
 jobs:
-  test:
+  generate-env:
     runs-on: ubuntu-latest
+<<<<<<< Updated upstream
     steps:
       - run: echo "hello" > hello.txt
       - uses: actions/upload-artifact@v3
         with:
           name: hello-artifact
           path: hello.txt
+=======
+
+    steps: 
+      # Create env file based on branch
+      - name: Create environment file based on branch
+        run: |
+          echo "Branch: ${{ github.ref_name }}"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
+          elif [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
+            echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
+          else
+            echo "Unsupported branch"
+            exit 1
+          fi
+
+      # Debug: list files to confirm env file exists
+      - name: List files before upload
+        run: ls -alh
+
+      # Upload .env.production if on main branch
+      - name: Upload .env.production artifact
+        if: ${{ github.ref_name == 'main' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file
+          path: .env.production
+
+      # Upload .env.local if on dev branch
+      - name: Upload .env.local artifact
+        if: ${{ github.ref_name == 'dev' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file
+          path: .env.local
+>>>>>>> Stashed changes
