@@ -10,32 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Create environment file based on branch
         run: |
           echo "Branch: ${{ github.ref_name }}"
           if [ "${{ github.ref_name }}" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
-            echo "Created .env.production"
           elif [ "${{ github.ref_name }}" = "dev" ]; then
             echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
             echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
-            echo "Created .env.local"
           else
-            echo "No env setup for this branch"
+            echo "Unsupported branch"
             exit 1
           fi
 
-      - name: Upload artifact
+      - name: Debug - list files before upload
+        run: ls -alh
+
+      - name: Upload .env.production artifact
         if: ${{ github.ref_name == 'main' }}
         uses: actions/upload-artifact@v3
         with:
           name: env-file
           path: .env.production
 
-      - name: Upload artifact
+      - name: Upload .env.local artifact
         if: ${{ github.ref_name == 'dev' }}
         uses: actions/upload-artifact@v3
         with:
