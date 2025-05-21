@@ -1,40 +1,55 @@
-name: Generate .env from Environment Secrets
+name: Generate Env File
 
-on: push
-
-permissions:
-  contents: write  # Allow push access to the repository
+on:
+  push:
+    branches: [main, dev]
 
 jobs:
   generate-env:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}  # Ensure environment matches the branch name
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Create .env and write secrets
+      - name: Set branch variable
+        id: vars
         run: |
-          sudo rm -rf /home/ubuntu/.env
-          
-          echo "REACT_APP_CRYPTO_SECRET_KEY=${{ secrets.REACT_APP_CRYPTO_SECRET_KEY }}" >> .env
-          echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
-          echo "REACT_APP_INDEXEDDB_DATABASE_NAME=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_NAME }}" >> .env
-          echo "REACT_APP_INDEXEDDB_DATABASE_STORENAME=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_STORENAME }}" >> .env
-          echo "REACT_APP_INDEXEDDB_DATABASE_VERSION=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_VERSION }}" >> .env
-          echo "REACT_APP__LOCAL_API_URL=${{ secrets.REACT_APP__LOCAL_API_URL }}" >> .env
- 
-          chmod 600 .env  # Set secure file permissions on the .env file
+          # Use workflow_dispatch input branch if provided, else use GITHUB_REF branch
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
+          else
+            BRANCH=${GITHUB_REF#refs/heads/}
+            echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          fi
 
-      - name: Commit and push changes to .env
+      - name: Debug branch info
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add .env
-          git commit -m "Update .env file with branch-specific secrets"
-          git push
+          echo "BRANCH=$BRANCH"
 
-      - name: Verify .env file
+      - name: Create env file based on branch
         run: |
-          cat .env  # Show content of .env for debugging purposes
+          if [ "$BRANCH" = "main" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
+          elif [ "$BRANCH" = "dev" ]; then
+            echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
+            echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
+          else
+            echo "Unsupported branch: $BRANCH"
+            exit 1
+          fi
+
+      - name: List files for debug
+        run: ls -la
+
+      - name: Upload env.production artifact
+        if: env.BRANCH == 'main'
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file-production
+          path: .env.production
+
+      - name: Upload env.local artifact
+        if: env.BRANCH == 'dev'
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file-dev
+          path: .env.local
