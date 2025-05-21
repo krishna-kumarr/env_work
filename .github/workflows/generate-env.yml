@@ -30,7 +30,8 @@ jobs:
           fi
 
       - name: Debug branch
-        run: echo "Detected branch: ${{ steps.set-branch.outputs.branch }}"
+        run: |
+         echo "Detected branch: ${{ steps.set-branch.outputs.branch }}"
 
       - name: Create env file
         run: |
