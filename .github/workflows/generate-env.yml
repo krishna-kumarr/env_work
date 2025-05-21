@@ -65,9 +65,6 @@ jobs:
       - name: Show current directory
         run: pwd
 
-      - name: List files here
-        run: ls -la
-
       - name: Set artifact path
         id: set-path 
         run: |
@@ -88,6 +85,11 @@ jobs:
             echo "File '${{ steps.set-path.outputs.path }}' does NOT exist."
             exit 1  # fail the job if file doesn't exist
           fi
+
+      - name: Confirm file to upload
+        run: |
+          echo "Uploading file from path: '${{ steps.set-path.outputs.path }}'"
+          ls -la "${{ steps.set-path.outputs.path }}"
 
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
