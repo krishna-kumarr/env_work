@@ -45,11 +45,20 @@ jobs:
             exit 1
           fi
 
+      - name: Set artifact path
+        id: set-path
+        run: |
+          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+            echo "path=.env.production" >> $GITHUB_OUTPUT
+          else
+            echo "path=.env.local" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.set-branch.outputs.branch == 'main' && '.env.production' || '.env.local' }}
+          path: ${{ steps.set-path.outputs.path }}
 
   use-env:
     needs: generate-env
@@ -64,7 +73,5 @@ jobs:
       - name: List downloaded files
         run: ls -la ./envfiles
 
-      # Example: use the downloaded env file
       - name: Show env file content
         run: cat ./envfiles/*
-
