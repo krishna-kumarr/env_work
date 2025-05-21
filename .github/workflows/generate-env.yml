@@ -71,14 +71,20 @@ jobs:
       - name: Set artifact path
         id: set-path 
         run: |
-          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+          if [[ "${{ github.ref }}" = "main" ]]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
           else
             echo "path=.env.local" >> $GITHUB_OUTPUT
           fi
 
-      - name: Debug artifact path
-        run: echo "Artifact path is '${{ steps.set-path.outputs.path }}'"
+      - name: Check if env file exists
+        run: |
+          if [ -f "${{ steps.set-path.outputs.path }}" ]; then
+            echo "File '${{ steps.set-path.outputs.path }}' exists."
+          else
+            echo "File '${{ steps.set-path.outputs.path }}' does NOT exist."
+            exit 1  # fail the job if file doesn't exist
+          fi
 
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
