@@ -10,8 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code (optional if you don't need repo files)
       - uses: actions/checkout@v3
 
+      # Create env file based on branch
       - name: Create environment file based on branch
         run: |
           echo "Branch: ${{ github.ref_name }}"
@@ -25,9 +27,11 @@ jobs:
             exit 1
           fi
 
-      - name: Debug - list files before upload
+      # Debug: list files to confirm env file exists
+      - name: List files before upload
         run: ls -alh
 
+      # Upload .env.production if on main branch
       - name: Upload .env.production artifact
         if: ${{ github.ref_name == 'main' }}
         uses: actions/upload-artifact@v3
@@ -35,6 +39,7 @@ jobs:
           name: env-file
           path: .env.production
 
+      # Upload .env.local if on dev branch
       - name: Upload .env.local artifact
         if: ${{ github.ref_name == 'dev' }}
         uses: actions/upload-artifact@v3
