@@ -17,15 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
-      - name: Debug branch info
-        run: |
-          echo "GITHUB_REF=$GITHUB_REF"
-          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
-
+ 
       - name: Create env file based on branch
         run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
+          BRANCH=${{ github.ref_name }} 
           echo "Branch is $BRANCH"
           if [ "$BRANCH" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
