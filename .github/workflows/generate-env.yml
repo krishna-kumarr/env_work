@@ -1,23 +1,40 @@
-name: Generate Env File
+name: Generate .env from Environment Secrets
 
-on: [push]
-  # push:
-  #   branches: [main, dev]
-  # pull_request:
-  #   branches: [main, dev]
-  # workflow_dispatch:
-  #   inputs:
-  #     branch:
-  #       description: 'Branch to generate env for'
-  #       required: false
-  #       default: 'main'
+on: push
+
+permissions:
+  contents: write  # Allow push access to the repository
 
 jobs:
-  test-upload:
+  generate-env:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}  # Ensure environment matches the branch name
+
     steps:
-      - run: echo "test" > test.txt
-      - uses: actions/upload-artifact@v3.0.0
-        with:
-          name: test-artifact
-          path: test.txt
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env and write secrets
+        run: |
+          sudo rm -rf /home/ubuntu/.env
+          
+          echo "REACT_APP_CRYPTO_SECRET_KEY=${{ secrets.REACT_APP_CRYPTO_SECRET_KEY }}" >> .env
+          echo "REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL }}" >> .env
+          echo "REACT_APP_INDEXEDDB_DATABASE_NAME=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_NAME }}" >> .env
+          echo "REACT_APP_INDEXEDDB_DATABASE_STORENAME=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_STORENAME }}" >> .env
+          echo "REACT_APP_INDEXEDDB_DATABASE_VERSION=${{ secrets.REACT_APP_INDEXEDDB_DATABASE_VERSION }}" >> .env
+          echo "REACT_APP__LOCAL_API_URL=${{ secrets.REACT_APP__LOCAL_API_URL }}" >> .env
+ 
+          chmod 600 .env  # Set secure file permissions on the .env file
+
+      - name: Commit and push changes to .env
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .env
+          git commit -m "Update .env file with branch-specific secrets"
+          git push
+
+      - name: Verify .env file
+        run: |
+          cat .env  # Show content of .env for debugging purposes
