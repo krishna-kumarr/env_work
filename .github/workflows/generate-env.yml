@@ -71,10 +71,13 @@ jobs:
       - name: Set artifact path
         id: set-path 
         run: |
-          if [[ "${{ github.ref }}" = "main" ]]; then
+          if [[ "${{ steps.set-branch.outputs.branch }}" == "main" ]]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
-          else
+          elif [[ "${{ steps.set-branch.outputs.branch }}" == "dev" ]]; then
             echo "path=.env.local" >> $GITHUB_OUTPUT
+          else
+            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
+            exit 1
           fi
 
       - name: Check if env file exists
