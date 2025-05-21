@@ -91,24 +91,32 @@ jobs:
           echo "Uploading file from path: '${{ steps.set-path.outputs.path }}'"
           ls -la "${{ steps.set-path.outputs.path }}"
 
+          - name: Create env file
+          run: |
+            if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+              echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
+            else
+              echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
+            fi
+        
       - name: Detect env file
         id: detect-env
         run: |
-         if [ -f .env.production ]; then
-          echo "envfile=.env.production" >> $GITHUB_OUTPUT
-         elif [ -f .env.local ]; then
-          echo "envfile=.env.local" >> $GITHUB_OUTPUT
-         else
-          echo "No .env.* file found."
-          echo "envfile=" >> $GITHUB_OUTPUT
-         fi
-        
+            if [ -f .env.production ]; then
+              echo "envfile=.env.production" >> $GITHUB_OUTPUT
+            elif [ -f .env.local ]; then
+              echo "envfile=.env.local" >> $GITHUB_OUTPUT
+            else
+              echo "envfile=" >> $GITHUB_OUTPUT
+            fi
+         
       - name: Upload env artifact
+        if: steps.detect-env.outputs.envfile != ''
         uses: actions/upload-artifact@v4
         with:
           name: env-file
-          path: /.env.production
-          if-no-files-found: warn
+          path: ${{ steps.detect-env.outputs.envfile }}
+        
   # use-env:
   #   needs: generate-env
   #   runs-on: ubuntu-latest
