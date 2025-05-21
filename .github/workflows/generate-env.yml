@@ -18,29 +18,31 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Set clean branch name into env var
-      - name: Set branch variable
-        run: echo "BRANCH=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
-
-      - name: Debug branch info
-        run: echo "Branch is $BRANCH"
-
-      - name: Create env file based on branch
+      - name: Set BRANCH variable
         run: |
-          if [ "$BRANCH" = "main" ]; then
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
+          else
+            echo "BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
+
+      - name: Debug branch
+        run: |
+          echo "Detected branch: ${{ env.BRANCH }}"
+
+      - name: Create env file
+        run: |
+          if [ "${{ env.BRANCH }}" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
-          elif [ "$BRANCH" = "dev" ]; then
+          elif [ "${{ env.BRANCH }}" = "dev" ]; then
             echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
             echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
           else
-            echo "Unsupported branch: $BRANCH"
+            echo "Unsupported branch: ${{ env.BRANCH }}"
             exit 1
           fi
 
-      - name: List files for debug
-        run: ls -la
-
-      - name: Upload env file
+      - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ env.BRANCH }}
