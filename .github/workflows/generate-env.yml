@@ -3,7 +3,14 @@ name: Generate Env File
 on:
   push:
     branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to generate env for'
+        required: false
+        default: ''
 
 jobs:
   generate-env:
@@ -11,15 +18,23 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set branch variable
+        id: vars
+        run: |
+          # Use workflow_dispatch input branch if provided, else use GITHUB_REF branch
+          if [ -n "${{ github.event.inputs.branch }}" ]; then
+            echo "BRANCH=${{ github.event.inputs.branch }}" >> $GITHUB_ENV
+          else
+            BRANCH=${GITHUB_REF#refs/heads/}
+            echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+          fi
+
       - name: Debug branch info
         run: |
-          echo "GITHUB_REF=$GITHUB_REF"
-          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+          echo "BRANCH=$BRANCH"
 
       - name: Create env file based on branch
         run: |
-          BRANCH=${GITHUB_REF#refs/heads/}
-          echo "Branch is $BRANCH"
           if [ "$BRANCH" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
           elif [ "$BRANCH" = "dev" ]; then
@@ -33,8 +48,16 @@ jobs:
       - name: List files for debug
         run: ls -la
 
-      - name: Upload env file
+      - name: Upload env.production artifact
+        if: env.BRANCH == 'main'
         uses: actions/upload-artifact@v3
         with:
-          name: env-file-${{ github.ref_name }}
-          path: ${{ github.ref_name == 'main' && '.env.production' || '.env.local' }}
+          name: env-file-production
+          path: .env.production
+
+      - name: Upload env.local artifact
+        if: env.BRANCH == 'dev'
+        uses: actions/upload-artifact@v3
+        with:
+          name: env-file-dev
+          path: .env.local
