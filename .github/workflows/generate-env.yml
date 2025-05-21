@@ -95,7 +95,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.set-path.outputs.path }}
+          path: .env.production
 
   # use-env:
   #   needs: generate-env
