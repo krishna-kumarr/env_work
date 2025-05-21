@@ -62,9 +62,6 @@ jobs:
            cat .env.local
           fi
 
-      - name: Show current directory
-        run: pwd
-
       - name: Set artifact path
         id: set-path 
         run: |
@@ -77,19 +74,10 @@ jobs:
             exit 1
           fi
 
-      - name: Check if env file exists
-        run: |
-          if [ -f "${{ steps.set-path.outputs.path }}" ]; then
-            echo "File '${{ steps.set-path.outputs.path }}' exists."
-          else
-            echo "File '${{ steps.set-path.outputs.path }}' does NOT exist."
-            exit 1  # fail the job if file doesn't exist
-          fi
-        
       - name: Find env file path
         id: find-env
         run: |
-          envfile=$(find . -type f -name ".env.*" | head -n 1)
+          envfile=$(find . -type f -name ".env.*" | head -n 1 | sed 's|^\./||')
           echo "Found env file: $envfile"
           echo "envfile=$envfile" >> $GITHUB_OUTPUT
          
