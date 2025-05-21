@@ -1,14 +1,47 @@
-name: Test Upload Artifact
+name: Generate Env File
 
-on: [push]
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to generate env for'
+        required: true
+        default: 'main'
 
 jobs:
-  test-upload:
-    runs-on: ubuntu-latest  # GitHub-hosted runner
-
+  generate-env:
+    runs-on: ubuntu-latest
     steps:
-      - run: echo "test" > test.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v3
+
+      - name: Debug branch info
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_REF_NAME=$GITHUB_REF_NAME"
+
+      - name: Create env file based on branch
+        run: |
+          BRANCH=${GITHUB_REF#refs/heads/}
+          echo "Branch is $BRANCH"
+          if [ "$BRANCH" = "main" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
+          elif [ "$BRANCH" = "dev" ]; then
+            echo "API_KEY=${{ secrets.DEV_API_KEY }}" > .env.local
+            echo "DB_URL=${{ secrets.DEV_DB_URL }}" >> .env.local
+          else
+            echo "Unsupported branch: $BRANCH"
+            exit 1
+          fi
+
+      - name: List files for debug
+        run: ls -la
+
+      - name: Upload env file
+        uses: actions/upload-artifact@v4
         with:
-          name: test-artifact
-          path: test.txt
+          name: env-file-${{ github.ref_name }}
+          path: ${{ github.ref_name == 'main' && '.env.production' || '.env.local' }}
