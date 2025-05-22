@@ -59,4 +59,4 @@ jobs:
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: env/
+          path: ./env
