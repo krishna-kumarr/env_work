@@ -63,7 +63,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
             set -e
-            ENV_FILE="${{ steps.set-envfile.outputs.envfile }}"
+            ENV_FILE="${{ steps.create-env.outputs.envfile }}"
             ENV_NAME="${{ steps.set-branch.outputs.branch }}"
   
             echo "Reading secrets from $ENV_FILE to update environment: $ENV_NAME"
