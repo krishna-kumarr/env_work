@@ -32,10 +32,6 @@ jobs:
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Debug branch
-        run: |
-          echo "Detected branch: ${{ steps.set-branch.outputs.branch }}"
-
       - name: Create env file
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
@@ -46,73 +42,38 @@ jobs:
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
           fi 
-
-          if [ -f .env.production ]; then chmod 600 .env.production; fi
-          if [ -f .env.local ]; then chmod 600 .env.local; fi
-
-      - name: Show env file content
-        run: |
-          if [ -f .env.production ]; then
-           echo ".env.production contents:"
-           cat .env.production
-          fi
-
-          if [ -f .env.local ]; then
-           echo ".env.local contents:"
-           cat .env.local
-          fi
-
-      - name: Show current directory
-        run: pwd
-
-      - name: List files here
-        run: ls -la
-
+ 
       - name: Set artifact path
         id: set-path 
         run: |
-          if [[ "${{ steps.set-branch.outputs.branch }}" == "main" ]]; then
+          if [[ "${{ steps.set-branch.outputs.branch }}" = "main" ]]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
-          elif [[ "${{ steps.set-branch.outputs.branch }}" == "dev" ]]; then
-            echo "path=.env.local" >> $GITHUB_OUTPUT
           else
-            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
-            exit 1
+            echo "path=.env.local" >> $GITHUB_OUTPUT
           fi
 
-      - name: Confirm file exists
-        run: |
-            if [ ! -f "${{ github.workspace }}/.env.production" ]; then
-              echo "File not found!"
-              exit 1
-            fi
+      - name: Debug artifact path
+        run: echo "Artifact path is '${{ steps.set-path.outputs.path }}'"
 
-      - name: Find env file path
-        id: find-env
-        run: |
-            envfile=$(find . -type f -name ".env.*" | head -n 1 | sed 's|^\./||')
-            echo "envfile=$envfile"
-            echo "envfile=$envfile" >> $GITHUB_OUTPUT
-        
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.find-env.outputs.envfile }}
+          path: ${{ steps.set-path.outputs.path }}
 
-  # use-env:
-  #   needs: generate-env
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download env artifact
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: env-file-${{ needs.generate-env.outputs.branch }}
-  #         path: ./envfiles
+  use-env:
+    needs: generate-env
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download env artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file-${{ needs.generate-env.outputs.branch }}
+          path: ./envfiles
 
-  #     - name: List downloaded files
-  #       run: ls -la ./envfiles
+      - name: List downloaded files
+        run: ls -la ./envfiles
 
-  #     - name: Show env file content
-  #       run: cat ./envfiles/*
+      - name: Show env file content
+        run: cat ./envfiles/*
