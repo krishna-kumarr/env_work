@@ -35,21 +35,14 @@ jobs:
       - name: Create env file from current environment
         id: create-env
         run: |
-          BRANCH=${{ steps.set-branch.outputs.branch }}
-          echo "Using branch: $BRANCH"
-          if [[ "$BRANCH" == "main" ]]; then
-            ENV_FILE=".env.production"
-          elif [[ "$BRANCH" == "dev" ]]; then
-            ENV_FILE=".env.local"
+          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
+          elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
+            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.local
           else
-            echo "Unsupported branch: $BRANCH"
+            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
           fi
-          echo "Creating $ENV_FILE from environment variables"
-          printenv | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^RUNNER_' > "$ENV_FILE"
-          echo "envfile=$ENV_FILE" >> $GITHUB_OUTPUT
-          echo "Created:"
-          cat "$ENV_FILE"
 
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
