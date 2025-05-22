@@ -5,11 +5,10 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
-permissions:
+permissions:  # ✅ This is valid
   contents: read
   id-token: write
-  actions: write
-  secrets: write
+  actions: write 
 
 jobs:
   generate-env:
