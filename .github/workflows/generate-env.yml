@@ -3,7 +3,6 @@ name: Generate and Use Env File
 on:
   push:
     branches: [main, dev] 
-
   workflow_dispatch:
 
 jobs:
@@ -26,17 +25,21 @@ jobs:
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create env file
+      - name: Dynamically create env file from all non-GitHub env vars
         run: |
-          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
-          elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.local
-          else
-            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
-            exit 1
-          fi 
- 
+          FILE_NAME=".env.production"
+          if [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
+            FILE_NAME=".env.local"
+          fi
+
+          echo "Creating $FILE_NAME from environment variables..."
+
+          # Dump current environment, exclude GitHub-provided vars
+          printenv | grep -vE '^GITHUB|^RUNNER|^ACTIONS|^CI|^HOME|^PWD|^PATH' > "$FILE_NAME"
+
+          echo "Created $FILE_NAME:"
+          cat "$FILE_NAME"
+
       - name: Set artifact path
         id: set-path 
         run: |
@@ -46,12 +49,24 @@ jobs:
             echo "path=.env.local" >> $GITHUB_OUTPUT
           fi
 
-      - name: Debug artifact path
-        run: echo "Artifact path is '${{ steps.set-path.outputs.path }}'"
-
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
           path: ${{ steps.set-path.outputs.path }}
+
+      - name: Set GitHub Environment Secrets from env file
+        env:
+          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
+          ENV_FILE: ${{ steps.set-path.outputs.path }}
+        run: |
+          echo "Reading $ENV_FILE and setting secrets in environment: ${{ steps.set-branch.outputs.branch }}"
+          while IFS='=' read -r key value; do
+            key=$(echo "$key" | xargs)
+            value=$(echo "$value" | xargs)
+            if [[ -n "$key" && -n "$value" ]]; then
+              echo "Setting secret $key"
+              gh secret set "$key" --body "$value" --env "${{ steps.set-branch.outputs.branch }}"
+            fi
+          done < "$ENV_FILE"

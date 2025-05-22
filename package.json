@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "get-env": "gh run download --name env-file-main"
   },
   "dependencies": {
     "react": "^19.0.0",
