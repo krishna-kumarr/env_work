@@ -1,8 +1,15 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
-BRANCH="$1"
+# Ensure GitHub CLI is authenticated
+if ! gh auth status >/dev/null 2>&1; then
+  echo "❌ GitHub CLI is not authenticated. Please run 'gh auth login' and try again."
+  exit 1
+fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 
 if [[ "$BRANCH" == "main" ]]; then
   ENV_FILE="env/.env.production"
@@ -14,8 +21,8 @@ else
 fi
 
 if [ ! -f "$ENV_FILE" ]; then
-  echo "Warning: $ENV_FILE not found, skipping secret update for branch '$BRANCH'."
-  exit 0   # exit successfully without error
+  echo "$ENV_FILE not found. Skipping secret update for branch '$BRANCH'."
+  exit 0
 fi
 
 echo "Updating environment secrets for '$BRANCH' from $ENV_FILE..."
@@ -31,3 +38,5 @@ while IFS='=' read -r key value; do
   echo "Setting secret: $key"
   echo "$value" | gh secret set "$key" --env "$BRANCH"
 done < "$ENV_FILE"
+
+echo "All secrets uploaded to environment: $BRANCH"

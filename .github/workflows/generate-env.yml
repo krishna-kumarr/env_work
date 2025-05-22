@@ -30,11 +30,16 @@ jobs:
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
+            echo "API_KEY_1=${{ secrets.API_KEY_1 }}" | tee .env.production
+            echo "API_KEY_2=${{ secrets.API_KEY_2 }}" | tee .env.production
+
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
             echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.local
+
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
+            
           fi 
  
       - name: Set artifact path
