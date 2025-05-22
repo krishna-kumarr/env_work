@@ -2,15 +2,9 @@ name: Generate and Use Env File
 
 on:
   push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+    branches: [main, dev] 
+
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to generate env for'
-        required: false
-        default: ''
 
 jobs:
   generate-env:
