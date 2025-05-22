@@ -5,98 +5,97 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+
 jobs:
   generate-env:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'main' || github.ref_name == 'dev' && 'dev' || '' }}
 
     outputs:
       branch: ${{ steps.set-branch.outputs.branch }}
-      envfile: ${{ steps.set-envfile.outputs.envfile }}
-
+      
     steps:
       - uses: actions/checkout@v3
 
       - name: Set BRANCH variable
         id: set-branch
         run: |
+          echo "GITHUB EVENT INPUT BRANCH: ${{ github.event.inputs.branch }}"
+          echo "GITHUB REF NAME: ${{ github.ref_name }}"
           if [ -n "${{ github.event.inputs.branch }}" ]; then
             echo "branch=${{ github.event.inputs.branch }}" >> $GITHUB_OUTPUT
           else
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create env file
-        id: set-envfile
+      - name: Create env file from current environment
+        id: create-env
         run: |
-          BRANCH="${{ steps.set-branch.outputs.branch }}"
-          echo "Creating env file for branch: $BRANCH"
-
-          # Customize this to export all secrets/variables you want dynamically
+          BRANCH=${{ steps.set-branch.outputs.branch }}
+          echo "Using branch: $BRANCH"
           if [[ "$BRANCH" == "main" ]]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" > .env.production
-            echo ".env.production" >> $GITHUB_OUTPUT
+            ENV_FILE=".env.production"
           elif [[ "$BRANCH" == "dev" ]]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
-            echo ".env.local" >> $GITHUB_OUTPUT
+            ENV_FILE=".env.local"
           else
             echo "Unsupported branch: $BRANCH"
             exit 1
           fi
-
-          # Output the env file path
-          if [[ "$BRANCH" == "main" ]]; then
-            echo "envfile=.env.production" >> $GITHUB_OUTPUT
-          else
-            echo "envfile=.env.local" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Debug env file path
-        run: echo "Env file created at ${{ steps.set-envfile.outputs.envfile }}"
+          echo "Creating $ENV_FILE from environment variables"
+          printenv | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^RUNNER_' > "$ENV_FILE"
+          echo "envfile=$ENV_FILE" >> $GITHUB_OUTPUT
+          echo "Created:"
+          cat "$ENV_FILE"
 
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.set-envfile.outputs.envfile }}
+          path: ${{ steps.create-env.outputs.envfile }}
 
       - name: Set GitHub Environment Secrets from env file (only new secrets)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
-          ENV_FILE="${{ steps.set-envfile.outputs.envfile }}"
-          ENV_NAME="${{ steps.set-branch.outputs.branch }}"
-
-          echo "Reading secrets from $ENV_FILE to update environment: $ENV_NAME"
-
-          # List existing secrets in the target environment
-          existing_secrets=$(gh secret list --env "$ENV_NAME" --json name -q '.[].name' || echo "[]")
-          readarray -t existing_secrets_array <<<"$existing_secrets"
-
-          # Function to check if array contains an element
-          contains() {
-            local e match="$1"
-            shift
-            for e; do [[ "$e" == "$match" ]] && return 0; done
-            return 1
-          }
-
-          while IFS='=' read -r key value; do
-            key=$(echo "$key" | xargs)
-            value=$(echo "$value" | xargs)
-
-            # Skip empty lines or comments
-            if [[ -z "$key" ]] || [[ "$key" == \#* ]]; then
-              continue
-            fi
-
-            if [[ -n "$key" && -n "$value" ]]; then
-              if contains "$key" "${existing_secrets_array[@]}"; then
-                echo "Secret '$key' already exists in environment '$ENV_NAME' - skipping update."
-              else
-                echo "Creating new secret '$key' in environment '$ENV_NAME'."
-                echo "$value" | gh secret set "$key" --env "$ENV_NAME"
+            set -e
+            ENV_FILE="${{ steps.set-envfile.outputs.envfile }}"
+            ENV_NAME="${{ steps.set-branch.outputs.branch }}"
+  
+            echo "Reading secrets from $ENV_FILE to update environment: $ENV_NAME"
+  
+            # List existing secrets in the target environment
+            existing_secrets=$(gh secret list --env "$ENV_NAME" --json name -q '.[].name' || echo "[]")
+            readarray -t existing_secrets_array <<<"$existing_secrets"
+  
+            # Function to check if array contains an element
+            contains() {
+              local e match="$1"
+              shift
+              for e; do [[ "$e" == "$match" ]] && return 0; done
+              return 1
+            }
+  
+            while IFS='=' read -r key value; do
+              key=$(echo "$key" | xargs)
+              value=$(echo "$value" | xargs)
+  
+              # Skip empty lines or comments
+              if [[ -z "$key" ]] || [[ "$key" == \#* ]]; then
+                continue
               fi
-            fi
-          done < "$ENV_FILE"
+  
+              if [[ -n "$key" && -n "$value" ]]; then
+                if contains "$key" "${existing_secrets_array[@]}"; then
+                  echo "Secret '$key' already exists in environment '$ENV_NAME' - skipping update."
+                else
+                  echo "Creating new secret '$key' in environment '$ENV_NAME'."
+                  echo "$value" | gh secret set "$key" --env "$ENV_NAME"
+                fi
+              fi
+            done < "$ENV_FILE"
+  
