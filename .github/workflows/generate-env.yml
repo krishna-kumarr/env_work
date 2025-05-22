@@ -33,7 +33,6 @@ jobs:
         run: |
           BRANCH="${{ steps.set-branch.outputs.branch }}"
 
-          # Determine which local .env file to use
           if [[ "$BRANCH" == "main" ]]; then
             ENV_FILE=".env.production"
           elif [[ "$BRANCH" == "dev" ]]; then
@@ -43,13 +42,24 @@ jobs:
             exit 1
           fi
 
-          # Check file exists
           if [ ! -f "$ENV_FILE" ]; then
             echo "$ENV_FILE not found"
             exit 1
           fi
 
           echo "Updating GitHub Environment '$BRANCH' with secrets from $ENV_FILE..."
+
+          # Optional: list existing secrets to avoid re-setting
+          existing_secrets=$(gh secret list --env "$BRANCH" --json name -q '.[].name' || echo "")
+          readarray -t existing_array <<<"$existing_secrets"
+
+          contains() {
+            local val="$1"
+            for existing in "${existing_array[@]}"; do
+              [[ "$existing" == "$val" ]] && return 0
+            done
+            return 1
+          }
 
           while IFS='=' read -r key value; do
             key=$(echo "$key" | xargs)
@@ -59,26 +69,31 @@ jobs:
               continue
             fi
 
-            echo "Setting secret: $key"
+            if contains "$key"; then
+              echo "Secret '$key' already exists — updating..."
+            else
+              echo "Creating secret '$key'"
+            fi
+
             echo "$value" | gh secret set "$key" --env "$BRANCH"
           done < "$ENV_FILE"
 
-      - name: Recreate clean .env file from local environment (based on updated secrets)
+      - name: Recreate clean .env file from environment variables
         run: |
           BRANCH="${{ steps.set-branch.outputs.branch }}"
+
           if [[ "$BRANCH" == "main" ]]; then
             OUTPUT_ENV=".env.production"
           else
             OUTPUT_ENV=".env.local"
           fi
 
-          # Create new .env file from actual environment (excluding runner variables)
           printenv | grep -v -E '^(PWD|HOME|RUNNER_|GITHUB_|CI|PATH|SHELL|USER|UID|LOGNAME|TERM|LANG|SHLVL|_)=.*' > "$OUTPUT_ENV"
 
-          echo "Final $OUTPUT_ENV created:"
+          echo "Final $OUTPUT_ENV:"
           cat "$OUTPUT_ENV"
 
-      - name: Upload final .env file as artifact
+      - name: Upload final .env file
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ steps.set-branch.outputs.branch }}
