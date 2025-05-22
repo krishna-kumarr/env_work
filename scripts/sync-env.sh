@@ -14,8 +14,8 @@ else
 fi
 
 if [ ! -f "$ENV_FILE" ]; then
-  echo "$ENV_FILE not found"
-  exit 1
+  echo "Warning: $ENV_FILE not found, skipping secret update for branch '$BRANCH'."
+  exit 0   # exit successfully without error
 fi
 
 echo "Updating environment secrets for '$BRANCH' from $ENV_FILE..."
