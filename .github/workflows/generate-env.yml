@@ -29,9 +29,9 @@ jobs:
       - name: Create env file
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee ./env/.env.production
+            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee ./env/.env.local
+            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
