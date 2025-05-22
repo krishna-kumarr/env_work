@@ -61,19 +61,3 @@ jobs:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
           path: ${{ steps.set-path.outputs.path }}
-
-  use-env:
-    needs: generate-env
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download env artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: env-file-${{ needs.generate-env.outputs.branch }}
-          path: ./envfiles
-
-      - name: List downloaded files
-        run: ls -la ./envfiles
-
-      - name: Show env file content
-        run: cat ./envfiles/*
