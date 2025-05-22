@@ -5,10 +5,10 @@ on:
     branches: [main, dev]
   workflow_dispatch:
 
-permissions:  # ✅ This is valid
+permissions:
   contents: read
   id-token: write
-  actions: write 
+  actions: write
 
 jobs:
   generate-env:
@@ -24,6 +24,8 @@ jobs:
       - name: Set BRANCH variable
         id: set-branch
         run: |
+          echo "GITHUB EVENT INPUT BRANCH: ${{ github.event.inputs.branch }}"
+          echo "GITHUB REF NAME: ${{ github.ref_name }}"
           if [ -n "${{ github.event.inputs.branch }}" ]; then
             echo "branch=${{ github.event.inputs.branch }}" >> $GITHUB_OUTPUT
           else
@@ -31,42 +33,42 @@ jobs:
           fi
 
       - name: Create env file from current environment
+        id: create-env
         run: |
-          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+          BRANCH=${{ steps.set-branch.outputs.branch }}
+          echo "Using branch: $BRANCH"
+          if [[ "$BRANCH" == "main" ]]; then
             ENV_FILE=".env.production"
-          elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
+          elif [[ "$BRANCH" == "dev" ]]; then
             ENV_FILE=".env.local"
           else
-            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
+            echo "Unsupported branch: $BRANCH"
             exit 1
           fi
-
+          echo "Creating $ENV_FILE from environment variables"
           printenv | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^RUNNER_' > "$ENV_FILE"
-          echo "Created env file: $ENV_FILE"
+          echo "envfile=$ENV_FILE" >> $GITHUB_OUTPUT
+          echo "Created:"
           cat "$ENV_FILE"
-
-      - name: Set artifact path
-        id: set-path 
-        run: |
-          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            echo "path=.env.production" >> $GITHUB_OUTPUT
-          else
-            echo "path=.env.local" >> $GITHUB_OUTPUT
-          fi
 
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.set-path.outputs.path }}
+          path: ${{ steps.create-env.outputs.envfile }}
 
       - name: Set GitHub Environment Secrets from env file
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ENV_FILE: ${{ steps.set-path.outputs.path }}
         run: |
+          ENV_FILE=${{ steps.create-env.outputs.envfile }}
           echo "Reading $ENV_FILE and setting secrets in environment: ${{ steps.set-branch.outputs.branch }}"
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "Error: $ENV_FILE does not exist."
+            exit 1
+          fi
+
           while IFS='=' read -r key value; do
             key=$(echo "$key" | xargs)
             value=$(echo "$value" | xargs)
