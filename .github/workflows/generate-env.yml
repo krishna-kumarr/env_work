@@ -80,20 +80,25 @@ jobs:
             exit 1
           fi
 
-      - name: Check if env file exists
+      - name: Confirm file exists
         run: |
-          if [ -f "${{ steps.set-path.outputs.path }}" ]; then
-            echo "File '${{ steps.set-path.outputs.path }}' exists."
-          else
-            echo "File '${{ steps.set-path.outputs.path }}' does NOT exist."
-            exit 1  # fail the job if file doesn't exist
-          fi
+            if [ ! -f "${{ github.workspace }}/.env.production" ]; then
+              echo "File not found!"
+              exit 1
+            fi
 
+      - name: Find env file path
+        id: find-env
+        run: |
+            envfile=$(find . -type f -name ".env.*" | head -n 1 | sed 's|^\./||')
+            echo "envfile=$envfile"
+            echo "envfile=$envfile" >> $GITHUB_OUTPUT
+        
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           name: env-file-${{ steps.set-branch.outputs.branch }}
-          path: ${{ steps.set-path.outputs.path }}
+          path: ${{ steps.find-env.outputs.envfile }}
 
   # use-env:
   #   needs: generate-env
