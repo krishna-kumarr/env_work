@@ -14,7 +14,11 @@ on:
 
 jobs:
   generate-env:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    
     environment: ${{ github.ref_name == 'main' && 'main' || github.ref_name == 'dev' && 'dev' || '' }}
 
     outputs:
@@ -82,7 +86,7 @@ jobs:
           echo "envfile=$envfile" >> $GITHUB_OUTPUT
          
       - name: Upload env artifact 
-        uses: actions/upload-artifact@v4
+        uses: ./
         with:
           name: env-file
           path: ${{ steps.find-env.outputs.envfile }}
