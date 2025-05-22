@@ -2,8 +2,14 @@ name: Generate and Use Env File
 
 on:
   push:
-    branches: [main, dev] 
+    branches: [main, dev]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  actions: write
+  secrets: write
 
 jobs:
   generate-env:
@@ -25,25 +31,25 @@ jobs:
             echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Dynamically create env file from all non-GitHub env vars
+      - name: Create env file from current environment
         run: |
-          FILE_NAME=".env.production"
-          if [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            FILE_NAME=".env.local"
+          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
+            ENV_FILE=".env.production"
+          elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
+            ENV_FILE=".env.local"
+          else
+            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
+            exit 1
           fi
 
-          echo "Creating $FILE_NAME from environment variables..."
-
-          # Dump current environment, exclude GitHub-provided vars
-          printenv | grep -vE '^GITHUB|^RUNNER|^ACTIONS|^CI|^HOME|^PWD|^PATH' > "$FILE_NAME"
-
-          echo "Created $FILE_NAME:"
-          cat "$FILE_NAME"
+          printenv | grep -v '^PWD=' | grep -v '^HOME=' | grep -v '^RUNNER_' > "$ENV_FILE"
+          echo "Created env file: $ENV_FILE"
+          cat "$ENV_FILE"
 
       - name: Set artifact path
         id: set-path 
         run: |
-          if [[ "${{ steps.set-branch.outputs.branch }}" = "main" ]]; then
+          if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
           else
             echo "path=.env.local" >> $GITHUB_OUTPUT
@@ -58,7 +64,7 @@ jobs:
 
       - name: Set GitHub Environment Secrets from env file
         env:
-          GH_TOKEN: ${{ secrets.GH_ADMIN_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ENV_FILE: ${{ steps.set-path.outputs.path }}
         run: |
           echo "Reading $ENV_FILE and setting secrets in environment: ${{ steps.set-branch.outputs.branch }}"
