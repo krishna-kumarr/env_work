@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "get-env": "gh run download --name env-file-main"
+    "get-env": "gh run download --name env-file-main --dir ./env"
   },
   "dependencies": {
     "react": "^19.0.0",
