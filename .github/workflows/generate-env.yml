@@ -97,6 +97,7 @@ jobs:
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
+          include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
           path: ${{ steps.find-env.outputs.envfile }}
 
