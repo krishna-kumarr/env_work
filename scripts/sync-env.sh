@@ -5,9 +5,9 @@ set -e
 BRANCH="$1"
 
 if [[ "$BRANCH" == "main" ]]; then
-  ENV_FILE="./env/.env.production"
+  ENV_FILE="env/.env.production"
 elif [[ "$BRANCH" == "dev" ]]; then
-  ENV_FILE="./env/.env.local"
+  ENV_FILE="env/.env.local"
 else
   echo "Unsupported branch: $BRANCH"
   exit 1
