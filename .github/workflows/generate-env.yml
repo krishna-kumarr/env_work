@@ -93,6 +93,5 @@ jobs:
         run: |
           aws amplify update-app \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-            --environment-name ${{ needs.generate-env.outputs.branch }} \
             --environment-variables \
             "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
