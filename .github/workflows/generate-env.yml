@@ -67,12 +67,12 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1 # Change as per your region
+          aws-region: us-north-1 # Change as per your region
 
       - name: Update Amplify Environment Variables
         run: |
           aws amplify update-backend-environment \
-            --app-id YOUR_AMPLIFY_APP_ID \
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --environment-name ${{ needs.generate-env.outputs.branch }} \
             --environment-variables \
             "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
