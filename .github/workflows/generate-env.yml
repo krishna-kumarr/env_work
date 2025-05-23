@@ -86,7 +86,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: ${{ secrets.AWS_REGION }}
-          role-to-assume: arn:aws:iam::590183734346:role/YOUR_GITHUB_OIDC_ROLE
+          role-to-assume: arn:aws:iam::590183734346:role/GitHubActionsAmplifyUpdater
           role-session-name: AmplifyUpdateSession
 
       - name: Update Amplify Environment Variables
