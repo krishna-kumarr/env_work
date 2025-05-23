@@ -59,8 +59,7 @@ jobs:
   update-amplify-env:
     needs: generate-env
     runs-on: ubuntu-latest
-    # environment: ${{ needs.generate-env.outputs.branch }}
-    if: ${{ needs.generate-env.outputs.branch != '' }}
+    environment: ${{ needs.generate-env.outputs.branch }} 
 
     steps:
       - name: Debug Secrets
