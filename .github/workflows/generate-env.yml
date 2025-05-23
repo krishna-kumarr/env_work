@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, dev]
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run against'
+        required: false
 
 jobs:
   generate-env:
@@ -32,9 +36,17 @@ jobs:
               echo "API_KEY=${{ secrets.API_KEY }}"
               echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
               echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
+              echo "AWS_REGION=${{ secrets.AWS_REGION }}"
+              echo "AMPLIFY_APP_ID=${{ secrets.AMPLIFY_APP_ID }}"
             } > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
+            {
+              echo "API_KEY=${{ secrets.API_KEY }}"
+              echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
+              echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
+              echo "AWS_REGION=${{ secrets.AWS_REGION }}"
+              echo "AMPLIFY_APP_ID=${{ secrets.AMPLIFY_APP_ID }}"
+            } > .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
@@ -59,25 +71,23 @@ jobs:
   update-amplify-env:
     needs: generate-env
     runs-on: ubuntu-latest
-    environment: ${{ needs.generate-env.outputs.branch }} 
+    environment: ${{ needs.generate-env.outputs.branch }}
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
 
     steps:
-      - name: Debug Secrets
-        run: |
-          echo "API_KEY=${{ secrets.API_KEY }}"
-          echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
-          echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}"
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}"
-          echo "AMPLIFY_APP_ID=${{ secrets.AMPLIFY_APP_ID }}"
+      - name: Download env artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: env-file-${{ needs.generate-env.outputs.branch }}
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/YOUR_GITHUB_OIDC_ROLE
+          role-session-name: AmplifyUpdateSession
 
       - name: Update Amplify Environment Variables
         run: |
