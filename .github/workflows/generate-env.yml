@@ -36,16 +36,12 @@ jobs:
               echo "API_KEY=${{ secrets.API_KEY }}"
               echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
               echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
-              echo "AWS_REGION=${{ secrets.AWS_REGION }}"
-              echo "AMPLIFY_APP_ID=${{ secrets.AMPLIFY_APP_ID }}"
             } > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
             {
               echo "API_KEY=${{ secrets.API_KEY }}"
               echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
               echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
-              echo "AWS_REGION=${{ secrets.AWS_REGION }}"
-              echo "AMPLIFY_APP_ID=${{ secrets.AMPLIFY_APP_ID }}"
             } > .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
@@ -89,9 +85,13 @@ jobs:
           role-to-assume: arn:aws:iam::590183734346:role/update_aws_amplify_secret
           role-session-name: update_aws_amplify_secret
 
+      - name: Debug Env Vars
+        run: |
+          echo "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
+
       - name: Update Amplify Environment Variables
         run: |
           aws amplify update-app \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-            --environment-variables \
-            "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
+            --environment-variables "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
+
