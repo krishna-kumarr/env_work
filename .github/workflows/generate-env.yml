@@ -1,9 +1,8 @@
-name: Generate and Use Env File
+name: Generate and Use Env File + Update Amplify
 
 on:
   push:
-    branches: [main, dev] 
-
+    branches: [main, dev]
   workflow_dispatch:
 
 jobs:
@@ -13,7 +12,7 @@ jobs:
 
     outputs:
       branch: ${{ steps.set-branch.outputs.branch }}
-      
+
     steps:
       - uses: actions/checkout@v3
 
@@ -29,31 +28,51 @@ jobs:
       - name: Create env file
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.production
-            echo "API_KEY_1=${{ secrets.API_KEY_1 }}" | tee .env.production
-            echo "API_KEY_2=${{ secrets.API_KEY_2 }}" | tee .env.production
-
+            {
+              echo "API_KEY=${{ secrets.API_KEY }}"
+              echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
+              echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
+            } > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
-            echo "API_KEY=${{ secrets.API_KEY }}" | tee .env.local
-
+            echo "API_KEY=${{ secrets.API_KEY }}" > .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
             exit 1
-            
-          fi 
- 
+          fi
+
       - name: Set artifact path
-        id: set-path 
+        id: set-path
         run: |
           if [[ "${{ steps.set-branch.outputs.branch }}" = "main" ]]; then
             echo "path=.env.production" >> $GITHUB_OUTPUT
           else
             echo "path=.env.local" >> $GITHUB_OUTPUT
           fi
- 
+
       - name: Upload env artifact
         uses: actions/upload-artifact@v4
         with:
           include-hidden-files: true
           name: env-file-${{ steps.set-branch.outputs.branch }}
           path: ${{ steps.set-path.outputs.path }}
+
+  update-amplify-env:
+    needs: generate-env
+    runs-on: ubuntu-latest
+    if: ${{ needs.generate-env.outputs.branch != '' }}
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Change as per your region
+
+      - name: Update Amplify Environment Variables
+        run: |
+          aws amplify update-backend-environment \
+            --app-id YOUR_AMPLIFY_APP_ID \
+            --environment-name ${{ needs.generate-env.outputs.branch }} \
+            --environment-variables \
+            "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
