@@ -91,7 +91,7 @@ jobs:
 
       - name: Update Amplify Environment Variables
         run: |
-          aws amplify UpdateApp \
+          aws amplify update-app \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
             --environment-name ${{ needs.generate-env.outputs.branch }} \
             --environment-variables \
