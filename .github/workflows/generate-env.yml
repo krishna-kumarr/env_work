@@ -8,7 +8,7 @@ on:
 jobs:
   generate-env:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'main' || github.ref_name == 'dev' && 'dev' || '' }}
+    environment: ${{ github.ref_name }}
 
     outputs:
       branch: ${{ steps.set-branch.outputs.branch }}
@@ -59,6 +59,7 @@ jobs:
   update-amplify-env:
     needs: generate-env
     runs-on: ubuntu-latest
+    environment: ${{ needs.generate-env.outputs.branch }} 
     if: ${{ needs.generate-env.outputs.branch != '' }}
 
     steps:
