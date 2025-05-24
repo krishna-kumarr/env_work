@@ -33,15 +33,15 @@ jobs:
         run: |
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
             {
-              echo "API_KEY=${{ secrets.API_KEY }}"
-              echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
-              echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
+              echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
+              echo "NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }}"
+              echo "NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
             } > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
             {
-              echo "API_KEY=${{ secrets.API_KEY }}"
-              echo "API_KEY_1=${{ secrets.API_KEY_1 }}"
-              echo "API_KEY_2=${{ secrets.API_KEY_2 }}"
+              echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
+              echo "NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }}"
+              echo "NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
             } > .env.local
           else
             echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
@@ -87,11 +87,10 @@ jobs:
 
       - name: Debug Env Vars
         run: |
-          echo "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
+          echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }},NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }},NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
 
       - name: Update Amplify Environment Variables
         run: |
           aws amplify update-app \
             --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-            --environment-variables "API_KEY=${{ secrets.API_KEY }},API_KEY_1=${{ secrets.API_KEY_1 }},API_KEY_2=${{ secrets.API_KEY_2 }}"
-
+            --environment-variables "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }},NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }},NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
