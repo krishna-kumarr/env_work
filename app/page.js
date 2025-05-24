@@ -1,11 +1,14 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import { useEffect } from "react";
 
 export default function Home() {
-  console.log(process.env.NEXT_PUBLIC_API_KEY); // hiii
-  console.log(process.env.NEXT_PUBLIC_API_KEY_1); // hello
-  console.log(process.env.NEXT_PUBLIC_API_KEY_2); // success
-
+  
+  useEffect(() => {
+    console.log("NEXT_PUBLIC_API_KEY", process.env.NEXT_PUBLIC_API_KEY);
+    console.log("NEXT_PUBLIC_API_KEY_1", process.env.NEXT_PUBLIC_API_KEY_1);
+    console.log("NEXT_PUBLIC_API_KEY_2", process.env.NEXT_PUBLIC_API_KEY_2);
+  }, []);
 
   return (
     <div className={styles.page}>
