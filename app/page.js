@@ -28,6 +28,23 @@ export default function Home() {
             Get started by editing <code>app/page.js</code>.
           </li>
           <li>Save and see your changes instantly.</li>
+          <li>
+            {process.env.NEXT_PUBLIC_API_KEY === 'hiii' && (
+              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY}</p>
+            )}
+          </li>
+
+          <li>
+            {process.env.NEXT_PUBLIC_API_KEY_1 === 'hello' && (
+              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY_1}</p>
+            )}
+          </li>
+
+          <li>
+            {process.env.NEXT_PUBLIC_API_KEY_2 === 'success' && (
+              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY_2}</p>
+            )}
+          </li>
         </ol>
 
         <div className={styles.ctas}>
