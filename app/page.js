@@ -1,9 +1,11 @@
+"use client"
+
 import Image from "next/image";
 import styles from "./page.module.css";
 import { useEffect } from "react";
 
 export default function Home() {
-  
+
   useEffect(() => {
     console.log("NEXT_PUBLIC_API_KEY", process.env.NEXT_PUBLIC_API_KEY);
     console.log("NEXT_PUBLIC_API_KEY_1", process.env.NEXT_PUBLIC_API_KEY_1);
