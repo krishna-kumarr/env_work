@@ -30,19 +30,19 @@ export default function Home() {
           <li>Save and see your changes instantly.</li>
           <li>
             {process.env.NEXT_PUBLIC_API_KEY === 'hiii' && (
-              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY}</p>
+              `The API Key is ${process.env.NEXT_PUBLIC_API_KEY}`
             )}
           </li>
 
           <li>
             {process.env.NEXT_PUBLIC_API_KEY_1 === 'hello' && (
-              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY_1}</p>
+              `The API Key is ${process.env.NEXT_PUBLIC_API_KEY_1}`
             )}
           </li>
 
           <li>
             {process.env.NEXT_PUBLIC_API_KEY_2 === 'success' && (
-              <p>The API Key is {process.env.NEXT_PUBLIC_API_KEY_2}</p>
+              `The API Key is ${process.env.NEXT_PUBLIC_API_KEY_2}`
             )}
           </li>
         </ol>
