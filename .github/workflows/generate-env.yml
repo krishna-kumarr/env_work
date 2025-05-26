@@ -32,14 +32,21 @@ jobs:
       - name: Create env file
         run: |
           echo '${{ secrets.ALL_ENV_VARS }}' > env.json
-          cat env.json | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' > .env.generated
-
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
-            mv .env.generated .env.production
-            echo "path=.env.production" >> $GITHUB_OUTPUT
+            {
+              echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
+              echo "NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }}"
+              echo "NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
+            } > .env.production
+          elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
+            {
+              echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
+              echo "NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }}"
+              echo "NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
+            } > .env.local
           else
-            mv .env.generated .env.local
-            echo "path=.env.local" >> $GITHUB_OUTPUT
+            echo "Unsupported branch: ${{ steps.set-branch.outputs.branch }}"
+            exit 1
           fi
 
       - name: Set artifact path
@@ -85,9 +92,6 @@ jobs:
 
       - name: Update Amplify Environment Variables
         run: |
-          echo '${{ secrets.ALL_ENV_VARS }}' > env.json
-          ENV_VARS=$(jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | join(",")' env.json)
-
           aws amplify update-app \
-          --app-id ${{ secrets.AMPLIFY_APP_ID }} \
-          --environment-variables "$ENV_VARS"
+            --app-id ${{ secrets.AMPLIFY_APP_ID }} \
+            --environment-variables "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }},NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }},NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
