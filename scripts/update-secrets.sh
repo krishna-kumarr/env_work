@@ -2,15 +2,14 @@
 
 set -euo pipefail
 
-# Ensure GitHub CLI is authenticated
-if ! gh auth status >/dev/null 2>&1; then
-  echo "GitHub CLI is not authenticated. Please run 'gh auth login' and try again."
-  exit 1
-fi
-
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
 TOKEN=""
+
+if ! TOKEN; then
+  echo "GitHub token is not set. Please set the TOKEN variable."
+  exit 1
+fi
 
 if [[ "$BRANCH" == "main" ]]; then
   ENV_FILE="env/.env.production"
