@@ -31,7 +31,6 @@ jobs:
 
       - name: Create env file
         run: |
-          echo '${{ secrets.ALL_ENV_VARS }}' > env.json
           if [ "${{ steps.set-branch.outputs.branch }}" = "main" ]; then
             {
               echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
