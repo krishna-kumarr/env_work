@@ -44,7 +44,10 @@ export default function Home() {
             {process.env.NEXT_PUBLIC_API_KEY_2 === 'success' && (
               `The API Key is ${process.env.NEXT_PUBLIC_API_KEY_2}`
             )}
-            
+          </li>
+
+          <li>
+            {`The API Key is ${process.env.NEXT_PUBLIC_API_KEY_3}`}
           </li>
         </ol>
 

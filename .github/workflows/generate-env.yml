@@ -36,6 +36,7 @@ jobs:
               echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}"
               echo "NEXT_PUBLIC_API_KEY_1=${{ secrets.NEXT_PUBLIC_API_KEY_1 }}"
               echo "NEXT_PUBLIC_API_KEY_2=${{ secrets.NEXT_PUBLIC_API_KEY_2 }}"
+              echo "NEXT_PUBLIC_API_KEY_3=${{ secrets.NEXT_PUBLIC_API_KEY_3 }}"
             } > .env.production
           elif [ "${{ steps.set-branch.outputs.branch }}" = "dev" ]; then
             {
